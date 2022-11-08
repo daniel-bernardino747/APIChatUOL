@@ -12,5 +12,7 @@
         "sourceType": "module"
     },
     "rules": {
+        "no-console": "off",
+        "import/extensions": ["warn", {"js": "always"}]
     }
 }
