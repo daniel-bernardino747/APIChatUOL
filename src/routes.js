@@ -1,5 +1,5 @@
 import express from 'express';
-import { returnParticipants, registerParticipant } from './Controllers/Participants.js';
+import { returnParticipants, registerParticipant } from './Controllers/ParticipantsController.js';
 import sendMessage from './Controllers/MessagesController.js';
 
 const routes = express.Router();
