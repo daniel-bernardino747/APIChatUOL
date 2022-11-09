@@ -1,5 +1,5 @@
 import db from '../server.js';
-import { schemaParticipant } from '../Middlewares/participantsMiddleware.js';
+import schemaParticipant from '../Middlewares/participantsMiddleware.js';
 
 const returnColletion = () => db.collection('test');
 

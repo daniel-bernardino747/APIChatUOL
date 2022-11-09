@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-export const schemaParticipant = Joi.object({
+const schemaParticipant = Joi.object({
   name: Joi.string()
     .min(1)
     .max(30)
@@ -11,4 +11,4 @@ export const schemaParticipant = Joi.object({
     .required(),
 });
 
-export const schemaBla = 'bla';
+export default schemaParticipant;
