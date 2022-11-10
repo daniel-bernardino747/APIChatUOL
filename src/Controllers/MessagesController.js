@@ -38,4 +38,26 @@ async function sendMessage(request, response) {
   }
 }
 
-export default sendMessage;
+async function returnMessages(request, response) {
+  try {
+    const { limit: pageLimit } = request.query;
+    const Database = collectionMessages();
+    const byTime = { time: -1 };
+
+    if (!pageLimit) {
+      const allMessages = await Database.find().toArray();
+      return response.status(200).send(allMessages);
+    }
+    const selectedsMessages = (await Database.find()
+      .sort(byTime)
+      .limit(Number(pageLimit))
+      .toArray())
+      .reverse();
+
+    return response.status(200).send(selectedsMessages);
+  } catch (err) {
+    return response.status(400).json({ error: err });
+  }
+}
+
+export { returnMessages, sendMessage };
