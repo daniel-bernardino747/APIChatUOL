@@ -41,14 +41,29 @@ async function sendMessage(request, response) {
 async function returnMessages(request, response) {
   try {
     const { limit: pageLimit } = request.query;
+    const { user: participant } = request.headers;
+
+    const existingParticipant = await collectionParticipants().findOne({ name: participant });
+
+    if (!existingParticipant) {
+      return response.status(404).json({ error: 'This participant is not in the active users list.' });
+    }
+
     const Database = collectionMessages();
+
     const byTime = { time: -1 };
+    const filterToParticipant = {
+      $or: [
+        { from: participant },
+        { to: { $in: ['Todos', participant] } },
+      ],
+    };
 
     if (!pageLimit) {
       const allMessages = await Database.find().toArray();
       return response.status(200).send(allMessages);
     }
-    const selectedsMessages = (await Database.find()
+    const selectedsMessages = (await Database.find(filterToParticipant)
       .sort(byTime)
       .limit(Number(pageLimit))
       .toArray())
