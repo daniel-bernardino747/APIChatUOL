@@ -1,10 +1,12 @@
+import dayjs from 'dayjs';
 import db from '../server.js';
 import schemaParticipant from '../Middlewares/participantsMiddleware.js';
 
-const returnColletion = () => db.collection('test');
+const collectionParticipants = () => db.collection('test');
+const collectionMessages = () => db.collection('test2');
 
 function returnParticipants(request, response) {
-  const Database = returnColletion();
+  const Database = collectionParticipants();
 
   Database
     .find()
@@ -14,7 +16,7 @@ function returnParticipants(request, response) {
 
 async function registerParticipant(request, response) {
   const { name } = request.body;
-  const Database = returnColletion();
+  const Database = collectionParticipants();
   const existingUser = await Database.findOne({ name });
 
   if (existingUser) {
@@ -26,13 +28,24 @@ async function registerParticipant(request, response) {
     lastStatus: Date.now(),
   };
 
+  const messageSendingTime = dayjs().format('HH:mm:ss');
+
+  const statusMessage = {
+    from: name,
+    to: 'Todos',
+    text: 'entra na sala...',
+    type: 'status',
+    time: messageSendingTime,
+  };
+
   try {
     const { error, value: participant } = schemaParticipant.validate(newParticipant);
     if (error) throw error;
 
     await Database.insertOne(participant);
+    await collectionMessages().insertOne(statusMessage);
 
-    return response.status(200).json({ message: 'OK' });
+    return response.sendStatus(201);
   } catch (err) {
     const messageError = err.details[0].message;
 
