@@ -6,8 +6,7 @@ const schemaParticipant = Joi.object({
     .max(30)
     .required(),
 
-  lastStatus: Joi.date()
-    .timestamp('javascript')
+  lastStatus: Joi.number()
     .required(),
 });
 
