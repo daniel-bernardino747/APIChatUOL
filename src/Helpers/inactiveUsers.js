@@ -1,14 +1,12 @@
 import dayjs from 'dayjs';
+import { collectionParticipants, collectionMessages } from '../Utils/collections.js';
 
-async function removalInactiveUsers(db) {
-  console.log(db.namespace);
-  const dbParticipants = db.collection('test');
-  const dbMessages = db.collection('test2');
-  const allParticipants = await dbParticipants.find({}).toArray();
+async function removalInactiveUsers() {
+  const allParticipants = await collectionParticipants().find({}).toArray();
 
   async function removeUser(user) {
     const messageSendingTime = dayjs().format('HH:mm:ss');
-    console.log(user.name);
+
     const newMessage = {
       from: user.name,
       to: 'Todos',
@@ -17,29 +15,22 @@ async function removalInactiveUsers(db) {
       time: messageSendingTime,
     };
 
-    await dbParticipants.deleteOne({ _id: user._id });
-    await dbMessages.insertOne(newMessage);
+    await collectionParticipants().deleteOne({ _id: user._id });
+    await collectionMessages().insertOne(newMessage);
   }
 
   allParticipants
     .forEach((user) => {
-      const activeUserTime = user.lastStatus;
-      console.log(activeUserTime);
-
       const currentTime = Date.now();
-      console.log(currentTime);
-
+      const activeUserTime = user.lastStatus;
       const connectedTime = currentTime - activeUserTime;
-      console.log(connectedTime);
 
       const isLongerThan10Seconds = (connectedTime / 1000) > 10;
-      console.log(isLongerThan10Seconds);
 
       if (isLongerThan10Seconds) {
         removeUser(user);
       }
     });
-  console.log(allParticipants);
 }
 
 export default removalInactiveUsers;

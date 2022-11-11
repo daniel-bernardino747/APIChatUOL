@@ -1,9 +1,6 @@
 import dayjs from 'dayjs';
-import db from '../server.js';
 import schemaMessage from '../Middlewares/messageMiddleware.js';
-
-const collectionParticipants = () => db.collection('test');
-const collectionMessages = () => db.collection('test2');
+import { collectionParticipants, collectionMessages } from '../Utils/collections.js';
 
 async function sendMessage(request, response) {
   const { to, text, type } = request.body;
@@ -32,9 +29,7 @@ async function sendMessage(request, response) {
 
     return response.sendStatus(201);
   } catch (err) {
-    const messageError = err;
-    console.log(err);
-    return response.status(422).json({ error: messageError });
+    return response.status(422).json({ error: err });
   }
 }
 
@@ -49,8 +44,6 @@ async function returnMessages(request, response) {
       return response.status(404).json({ error: 'This participant is not in the active users list.' });
     }
 
-    const Database = collectionMessages();
-
     const byTime = { time: -1 };
     const filterToParticipant = {
       $or: [
@@ -60,10 +53,10 @@ async function returnMessages(request, response) {
     };
 
     if (!pageLimit) {
-      const allMessages = await Database.find().toArray();
+      const allMessages = await collectionMessages().find().toArray();
       return response.status(200).send(allMessages);
     }
-    const selectedsMessages = (await Database.find(filterToParticipant)
+    const selectedsMessages = (await collectionMessages().find(filterToParticipant)
       .sort(byTime)
       .limit(Number(pageLimit))
       .toArray())

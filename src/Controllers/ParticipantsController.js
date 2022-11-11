@@ -1,14 +1,9 @@
 import dayjs from 'dayjs';
-import db from '../server.js';
 import schemaParticipant from '../Middlewares/participantsMiddleware.js';
-
-const collectionParticipants = () => db.collection('test');
-const collectionMessages = () => db.collection('test2');
+import { collectionParticipants, collectionMessages } from '../Utils/collections.js';
 
 function returnParticipants(request, response) {
-  const Database = collectionParticipants();
-
-  Database
+  collectionParticipants()
     .find()
     .toArray()
     .then((allParticipants) => response.status(200).send(allParticipants));
@@ -16,8 +11,7 @@ function returnParticipants(request, response) {
 
 async function registerParticipant(request, response) {
   const { name } = request.body;
-  const Database = collectionParticipants();
-  const existingUser = await Database.findOne({ name });
+  const existingUser = await collectionParticipants().findOne({ name });
 
   if (existingUser) {
     return response.status(409).json({ error: 'This username already exists.' });
@@ -42,7 +36,7 @@ async function registerParticipant(request, response) {
     const { error, value: participant } = schemaParticipant.validate(newParticipant);
     if (error) throw error;
 
-    await Database.insertOne(participant);
+    await collectionParticipants().insertOne(participant);
     await collectionMessages().insertOne(statusMessage);
 
     return response.sendStatus(201);
