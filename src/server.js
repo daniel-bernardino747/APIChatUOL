@@ -3,10 +3,15 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import routes from './routes.js';
 import connectToMongo from './database.js';
+import removalInactiveUsers from './Helpers/inactiveUsers.js';
 
 dotenv.config();
 
 const db = await connectToMongo();
+
+setInterval(() => {
+  removalInactiveUsers(db);
+}, 5000);
 
 const app = express();
 const port = 5000;
