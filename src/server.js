@@ -11,7 +11,7 @@ const db = await connectToMongo();
 
 setInterval(() => {
   removalInactiveUsers(db);
-}, 5000);
+}, 15000);
 
 const app = express();
 const port = 5000;
