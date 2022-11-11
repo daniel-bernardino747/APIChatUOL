@@ -1,13 +1,11 @@
 import { MongoClient } from 'mongodb';
 
 async function connectToMongo() {
-  const mongoClient = new MongoClient(process.env.MONGO_URI);
-
   try {
-    console.log('🌀 connected in MongoDB');
+    const mongoClient = new MongoClient(process.env.MONGO_URI);
     return (await mongoClient.connect()).db('UOLChat');
   } catch (err) {
-    return console.log(err);
+    return err;
   }
 }
 

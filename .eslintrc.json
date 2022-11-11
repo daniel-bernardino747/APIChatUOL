@@ -12,7 +12,6 @@
         "sourceType": "module"
     },
     "rules": {
-        "no-console": "off",
         "import/extensions": ["warn", {"js": "always"}],
         "import/no-cycle": [2, { "maxDepth": 1 }],
         "no-underscore-dangle": ["error", { "allow": ["_id"] }]
