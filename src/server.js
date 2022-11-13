@@ -1,6 +1,6 @@
 import express from 'express';
-import cors from 'cors';
 import dotenv from 'dotenv';
+import cors from 'cors';
 import routes from './routes.js';
 import connectToMongo from './database.js';
 import removalInactiveUsers from './Helpers/inactiveUsers.js';
@@ -8,18 +8,16 @@ import removalInactiveUsers from './Helpers/inactiveUsers.js';
 dotenv.config();
 
 const db = await connectToMongo();
-
-setInterval(() => {
-  removalInactiveUsers(db);
-}, 15000);
-
 const app = express();
 const port = 5000;
 
-app.use(cors());
-app.use(express.json());
-app.use(routes);
+setInterval(() => removalInactiveUsers(db), 15000);
 
-app.listen(port, () => console.log(`🌀 started server in door: ${port}`));
+app.use(cors())
+  .use(express.json())
+  .use(routes)
+  .listen(port, () => {
+    console.log(`🌀 started server in door: ${port}`);
+  });
 
 export default db;

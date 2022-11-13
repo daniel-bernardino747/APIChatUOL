@@ -1,60 +1,56 @@
 import dayjs from 'dayjs';
+import { USER_NOT_FOUND } from '../Constants/MessageErrors.js';
 import schemaMessage from '../Middlewares/messageMiddleware.js';
 import { collectionParticipants, collectionMessages } from '../Utils/collections.js';
 
-async function sendMessage(request, response) {
-  const { to, text, type } = request.body;
-  const { user: from } = request.headers;
-
-  const existingUser = await collectionParticipants().findOne({ name: from });
-
-  if (!existingUser) {
-    return response.status(422).json({ error: 'You are not logged in' });
-  }
-
-  const messageSendingTime = dayjs().format('HH:mm:ss');
-  const newMessage = {
-    from,
-    to,
-    text,
-    type,
-    time: messageSendingTime,
-  };
+async function sendMessage(req, res) {
+  const { to, text, type } = req.body;
+  const { user: from } = req.headers;
 
   try {
-    const { error, value: message } = schemaMessage.validate(newMessage);
-    if (error) throw error;
+    const existingUser = await collectionParticipants().findOne({ name: from });
 
-    await collectionMessages().insertOne(message);
+    if (!existingUser) return res.status(422).json({ error: USER_NOT_FOUND });
 
-    return response.sendStatus(201);
+    const messageSendingTime = dayjs().format('HH:mm:ss');
+    const newMessage = {
+      from, to, text, type, time: messageSendingTime,
+    };
+
+    const { error } = schemaMessage.validate(newMessage);
+
+    if (error) {
+      const errors = error.details.map((d) => d.message);
+      return res.status(422).send(errors);
+    }
+    await collectionMessages().insertOne(newMessage);
+
+    return res.sendStatus(201);
   } catch (err) {
-    return response.status(422).json({ error: err });
+    return res.status(422).json({ error: err });
   }
 }
 
-async function returnMessages(request, response) {
+async function returnMessages(req, res) {
+  const { limit: pageLimit } = req.query;
+  const { user: name } = req.headers;
+
   try {
-    const { limit: pageLimit } = request.query;
-    const { user: participant } = request.headers;
+    const existingParticipant = await collectionParticipants().findOne({ name });
 
-    const existingParticipant = await collectionParticipants().findOne({ name: participant });
-
-    if (!existingParticipant) {
-      return response.status(404).json({ error: 'This participant is not in the active users list.' });
-    }
+    if (!existingParticipant) return res.status(404).json({ error: USER_NOT_FOUND });
 
     const byTime = { time: -1 };
     const filterToParticipant = {
       $or: [
-        { from: participant },
-        { to: { $in: ['Todos', participant] } },
+        { from: existingParticipant.name },
+        { to: { $in: ['Todos', existingParticipant.name] } },
       ],
     };
 
     if (!pageLimit) {
       const allMessages = await collectionMessages().find().toArray();
-      return response.status(200).send(allMessages);
+      return res.status(200).send(allMessages);
     }
     const selectedsMessages = (await collectionMessages().find(filterToParticipant)
       .sort(byTime)
@@ -62,9 +58,9 @@ async function returnMessages(request, response) {
       .toArray())
       .reverse();
 
-    return response.status(200).send(selectedsMessages);
+    return res.status(200).send(selectedsMessages);
   } catch (err) {
-    return response.status(400).json({ error: err });
+    return res.status(400).json({ error: err });
   }
 }
 
