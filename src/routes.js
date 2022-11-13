@@ -15,7 +15,7 @@ routes.post('/messages', sendMessage);
 
 routes.get('/messages', returnMessages);
 
-routes.get('/messages/:id', deleteMessage);
+routes.delete('/messages/:id', deleteMessage);
 
 routes.post('/status', updateStatus);
 
