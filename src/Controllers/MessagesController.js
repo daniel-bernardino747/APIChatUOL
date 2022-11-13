@@ -1,5 +1,8 @@
 import dayjs from 'dayjs';
-import { USER_NOT_FOUND } from '../Constants/MessageErrors.js';
+import { ObjectId } from 'mongodb';
+import {
+  MESSAGE_DELETED, MESSAGE_NOT_FOUND, NOT_OWNER_MESSAGE, USER_NOT_FOUND,
+} from '../Constants/MessageErrors.js';
 import schemaMessage from '../Middlewares/messageMiddleware.js';
 import { collectionParticipants, collectionMessages } from '../Utils/collections.js';
 
@@ -64,4 +67,23 @@ async function returnMessages(req, res) {
   }
 }
 
-export { returnMessages, sendMessage };
+async function deleteMessage(req, res) {
+  const { user } = req.headers;
+  const { id } = req.params;
+
+  try {
+    const existingMessage = await collectionMessages().find({ _id: ObjectId(id) });
+    const isOwnerMessage = existingMessage.from === user;
+
+    if (!isOwnerMessage) return res.status(401).json({ error: NOT_OWNER_MESSAGE });
+    if (!existingMessage) return res.status(404).json({ error: MESSAGE_NOT_FOUND });
+
+    await collectionMessages().deleteOne({ _id: ObjectId(id) });
+
+    return res.sendStatus(200).json({ message: MESSAGE_DELETED });
+  } catch (err) {
+    return res.status(500).json({ error: err });
+  }
+}
+
+export { returnMessages, sendMessage, deleteMessage };
