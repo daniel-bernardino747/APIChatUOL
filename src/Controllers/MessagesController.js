@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb';
 import {
   MESSAGE_DELETED, MESSAGE_NOT_FOUND, NOT_OWNER_MESSAGE, USER_NOT_FOUND,
 } from '../Constants/MessageErrors.js';
-import schemaMessage from '../Middlewares/messageMiddleware.js';
+import { schemaMessage, schemaUpdateMessage } from '../Middlewares/messageMiddleware.js';
 import { collectionParticipants, collectionMessages } from '../Utils/collections.js';
 
 async function sendMessage(req, res) {
@@ -86,4 +86,34 @@ async function deleteMessage(req, res) {
   }
 }
 
-export { returnMessages, sendMessage, deleteMessage };
+async function changeMessage(req, res) {
+  const { headers: { user }, params: { id }, body } = req;
+
+  try {
+    const existingUser = await collectionParticipants().find({ _id: ObjectId(id) });
+    const existingMessage = await collectionMessages().find({ _id: ObjectId(id) });
+    const isOwnerMessage = existingMessage.from === user;
+
+    if (!existingMessage) return res.status(404).json({ error: MESSAGE_NOT_FOUND });
+    if (!existingUser) return res.status(422).json({ error: USER_NOT_FOUND });
+    if (!isOwnerMessage) return res.status(401).json({ error: NOT_OWNER_MESSAGE });
+
+    const { error } = schemaUpdateMessage.validate(body);
+    if (error) {
+      const errors = error.details.map((d) => d.message);
+      return res.status(422).send(errors);
+    }
+
+    await collectionMessages().updateOne({
+      _id: ObjectId(id),
+    }, { $set: body });
+
+    return res.sendStatus(200);
+  } catch (err) {
+    return res.status(500).json({ error: err });
+  }
+}
+
+export {
+  returnMessages, sendMessage, deleteMessage, changeMessage,
+};

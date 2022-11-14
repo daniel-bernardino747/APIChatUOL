@@ -20,4 +20,18 @@ const schemaMessage = Joi.object({
     .required(),
 });
 
-export default schemaMessage;
+const schemaUpdateMessage = Joi.object({
+  to: Joi.string()
+    .min(1)
+    .required(),
+
+  text: Joi.string()
+    .min(1)
+    .required(),
+
+  type: Joi.string()
+    .valid('message', 'private_message')
+    .required(),
+});
+
+export { schemaMessage, schemaUpdateMessage };
